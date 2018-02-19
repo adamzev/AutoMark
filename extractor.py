@@ -13,23 +13,23 @@ class Extractor(object):
         all the way to the cells
     '''
 
-    def __init__(self, path):
+    def __init__(self, path, show_steps):
         self.helpers = Helpers()  # Image helpers
         self.image = self.helpers.loadImage(path)
-        self.helpers.show(self.image, 'Original')
-        self.gray, self.thresh, self.morph = self.preprocess(self.image)
-        self.helpers.show(self.thresh, 'After thresholdify')
-        self.helpers.show(self.morph, 'With Morph')
         
+        self.gray, self.thresh, self.morph = self.preprocess(self.image)        
         self.cropped_morph, self.cropped_tresh, self.cropped_gray, self.cropped = \
             self.crop_largest_contour(self.morph, [self.thresh, self.gray, self.image])
-        self.helpers.show(self.cropped, 'After Cropping out image')
+
         self.warp_morph, self.warp_thresh, self.warp_gray, self.warp = \
             self.straighten(self.cropped_morph, [self.cropped_tresh, self.cropped_gray, self.cropped])
-        self.helpers.show(self.warp, 'Final image')
-        self.helpers.show(self.warp_morph, 'Warp Morph')
-        self.helpers.show(self.warp_thresh, 'Warp Thresh')
-        self.helpers.show(self.warp_gray, 'Warp Gray')
+
+        if show_steps:
+            self.helpers.show(self.image, 'Original')
+            self.helpers.show(self.thresh, 'After thresholdify')
+            self.helpers.show(self.morph, 'With Morph')
+            self.helpers.show(self.cropped, 'After Cropping out image')
+            self.helpers.show(self.warp, 'Final image')
 
 
         self.get_rectangles(self.warp_morph, self.warp, count=14)
@@ -87,15 +87,45 @@ class Extractor(object):
             if cv2.contourArea(cnt) > max_size or len(self.helpers.approx(cnt)) not in [4, 5]:
                 continue
             n += 1
-            print(n, cv2.contourArea(cnt))
+            M = cv2.moments(cnt)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
             if cv2.contourArea(cnt) < min_size or n > count:
                 break
             im = display_image.copy()
             cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
             rect = self.helpers.cut_out_rect(display_image, cnt)
-            rects.append(rect)
-            ocr_num = pytesseract.image_to_string(rect)
-            self.helpers.show(rect, '{}) {} | contour sides:{}, area:{}'.format(n, ocr_num, len(self.helpers.approx(cnt)), cv2.contourArea(cnt)))
+            rects.append((rect, cX, cY))
+
+        rects.sort(key=lambda rect: rect[2])
+        sorted_rects = []
+        if count % 2 == 1:
+            raise ValueError("Only even currently supported")
+        for i in range(0, count, 2):
+            if rects[i][1] < rects[i+1][1]:
+                sorted_rects.extend([rects[i][0], rects[i+1][0]])
+            else:
+                sorted_rects.extend([rects[i+1][0], rects[i][0]])
+
+        for i, rect in enumerate(sorted_rects):
+            self.helpers.show(rect, str(i+1))
+            #cv2.imwrite("rect{}.png".format(str(i+1)), rect)
+            gray, thresh, morph = self.preprocess(rect)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+            rect_d = cv2.dilate(rect, kernel, iterations=3)
+            im2, contours, h = cv2.findContours(
+                morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            contours = sorted(contours, key=cv2.contourArea, reverse=True)
+            im1, im2 = self.straighten(morph, [rect])
+            self.helpers.show(im1, str(i+1))
+            self.helpers.show(im2, str(i+1))
+            #self.helpers.mask(rect, contours[0])
+            #for cnt in contours:
+                #im = rect_d.copy()
+                #cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
+                #self.helpers.show(im, 'rect contour')
+
+
         return None
 if __name__ == '__main__':
-    ext = Extractor('BCBA8F9752.jpg')
+    ext = Extractor('BCBA8F9752.jpg', False)

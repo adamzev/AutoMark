@@ -208,3 +208,23 @@ class Helpers(object):
         for col in range(start, end + 1):
             shifted[:, col + length] = image[:, col]
         return shifted
+
+    def mask(self, image, contour):
+        
+        mask = np.zeros_like(image) # Create mask where white is what we want, black otherwise
+        cv2.drawContours(mask, [contour], 0, (255, 255, 255), -1) # Draw filled contour in mask
+        out = np.zeros_like(image) # Extract out the object and place into output image
+        out[mask == 255] = image[mask == 255]
+
+        # Now crop
+        x, y, z = np.where(mask == 255)
+        #print(xy)
+        #x, y = xy
+        topx, topy = (np.min(x), np.min(y))
+        bottomx, bottomy = (np.max(x), np.max(y))
+        out = out[topx:bottomx+1, topy:bottomy+1]
+
+        # Show the output image
+        cv2.imshow('Output', out)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
