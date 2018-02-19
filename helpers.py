@@ -34,7 +34,7 @@ class Helpers(object):
         
     def thresholdify(self, img):
         img = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                    cv2.THRESH_BINARY, 11, 3)
+                                    cv2.THRESH_BINARY, 11, 2)
         return 255 - img
 
     def Canny(self, image):
@@ -55,28 +55,52 @@ class Helpers(object):
                 image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         return max(contours, key=cv2.contourArea)
 
-    def largest4SideContour(self, image):
+    def largest4SideContour(self, processed, show=False, display_image=None):
         im2, contours, h = cv2.findContours(
-            image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
         for cnt in contours[:min(5,len(contours))]:
-            im = image.copy()
-            cv2.drawContours(im, cnt, -1, (255,255,255), 5)
-            self.show(im,'contour')
+            if show:
+                im = display_image.copy()
+                cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
+                self.show(im,'contour')
             if len(self.approx(cnt)) == 4:
                 return cnt
         return None
 
+    def show_all_contours(self, processed, display_image=False, min_size=100):
+        im2, contours, h = cv2.findContours(
+            processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        if not display_image.any():
+            display_image = processed
+        for cnt in contours:
+            if cv2.contourArea(cnt) < min_size:
+                break
+            im = display_image.copy()
+            cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
+            self.show(im,'contour sides:{}, area:{}'.format(len(self.approx(cnt)), cv2.contourArea(cnt)))
+        return None
+
+
+
+
     def make_it_square(self, image, side_length=306):
         return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
+
+
+    def make_it_letter(self, image, side_length=306):
+        return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
+
 
     def area(self, image):
         return float(image.shape[0] * image.shape[1])
 
-    def cut_out_sudoku_puzzle(self, image, contour):
+    def cut_out_rect(self, image, contour):
         x, y, w, h = cv2.boundingRect(contour)
         image = image[y:y + h, x:x + w]
-        return self.make_it_square(image, min(image.shape))
+        return image
 
     def binarized(self, image):
         for i in range(image.shape[0]):
@@ -119,7 +143,8 @@ class Helpers(object):
         # take the maximum of the width and height values to reach
         # our final dimensions
         maxWidth = max(int(widthA), int(widthB))
-        maxHeight = max(int(heightA), int(heightB))
+        maxHeight = int(maxWidth * (11/8.5))
+        #maxHeight = max(int(heightA), int(heightB))
 
         # construct our destination points which will be used to
         # map the screen to a top-down, "birds eye" view
@@ -132,6 +157,8 @@ class Helpers(object):
         # calculate the perspective transform matrix and warp
         # the perspective to grab the screen
         M = cv2.getPerspectiveTransform(rect, dst)
+
+        print(M)
         warp = cv2.warpPerspective(grid, M, (maxWidth, maxHeight))
         #return self.make_it_square(warp)
         return warp

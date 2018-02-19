@@ -7,7 +7,7 @@ from PIL import Image
 import pytesseract
 
 helpers = Helpers()
-img = helpers.loadImage('processed.png')
+img = helpers.loadImage('processed_org.png')
 reflect = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0]])
 print(img.shape)
 #helpers.show(img * reflect)
