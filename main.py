@@ -1,12 +1,9 @@
-import numpy as np
+from extractor import Extractor
+import helpers as Helpers
 
-x = np.array([
-    [0, 1, 1], [1, 1, 0], [1, 0, 1]
-])
+ext = Extractor('images/BCBA8F9752.jpg', False)
 
-y = np.array([
-    3.66, 1.55, 3.42
-])
+final = ext.final
+#Helpers.show(final)
 
-scalars = np.linalg.solve(x, y)
-print(scalars)
+cells = Cells(final)
