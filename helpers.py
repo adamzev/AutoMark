@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import math
 
 '''
 Image manipulation helper functions
@@ -22,6 +22,7 @@ def show(img, windowName='Image'):
     cv2.destroyAllWindows()
 
 def loadImage(path):
+    print(path)
     color_img = cv2.imread(path)
     if color_img is None:
         raise IOError('Image not loaded')
@@ -44,13 +45,42 @@ def Canny(image):
 def dilate(image, kernel):
     return cv2.dilate(image, kernel)
 
+
 def get_sorted_contours(processed, sort_by='area'):
     im2, contours, h = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     if sort_by == "area":
         return sorted(contours, key=cv2.contourArea, reverse=True)
+    elif sort_by == "left-to-right":
+        return contours.sort_contours(refCnts, method="left-to-right")[0]
     else:
         raise ValueError("Sort by {} is not implemented".format(sort_by))
+
+def sort_contours(contours, method="left-to-right"):
+    # initialize the reverse flag and sort index
+    reverse = False
+    index = 0 # 0 is x, 1 is y
+
+    # handle if we need to sort in reverse
+    if method == "right-to-left" or method == "bottom-to-top":
+        reverse = True
+
+
+    # handle if we are sorting against the y-coordinate rather than
+    # the x-coordinate of the bounding box
+    if method == "top-to-bottom" or method == "bottom-to-top":
+        i = 1
+
+    centers = []
+    for contour in contours:
+        centers.append(get_centers_of_contour(contour))
+
+    # sort by the y value of the centers
+    sorted_contours = [contour for contour, center in sorted(zip(contours, centers), key=lambda pair: pair[1][index], reverse=reverse)]
+ 
+    # return the list of sorted contours and bounding boxes
+    return sorted_contours
+
 
 def filter_contours(contours, sides=None, min_area=None, max_area=None):
     result = []
@@ -70,6 +100,42 @@ def filter_contours(contours, sides=None, min_area=None, max_area=None):
 
 def save_image(full_path, image):
     cv2.imwrite(full_path, image)
+
+
+def find_contours(image, mode_type="default", method_type="default", min_area=20):
+    '''
+        RETR_EXTERNAL: retrieves only the extreme outer contours. 
+
+        RETR_LIST: retrieves all of the contours without establishing any hierarchical relationships.
+
+        RETR_TREE: retrieves all of the contours and reconstructs a full hierarchy of nested contours.
+
+        RETR_FLOODFILL 
+
+        CHAIN_APPROX_SIMPLE  compresses horizontal, vertical, and diagonal segments and leaves only their end points. 
+
+        CHAIN_APPROX_TC89_L1 applies one of the flavors of the Teh-Chin chain approximation algorithm [168]
+
+        CHAIN_APPROX_TC89_KCOS 	applies one of the flavors of the Teh-Chin chain approximation algorithm [168]
+
+    '''
+    
+    mode = cv2.RETR_TREE
+    method = cv2.CHAIN_APPROX_SIMPLE
+
+    if mode_type == "external":
+        mode = cv2.RETR_EXTERNAL
+    
+    if method_type == "Teh-Chin":
+        method = cv2.CHAIN_APPROX_TC89_L1
+    
+    if method_type == "Teh-Chin2":
+        method = cv2.CHAIN_APPROX_TC89_KCOS
+    
+    contours = cv2.findContours(image, mode=mode, method=method)[1]
+
+    return filter_contours(contours, min_area=min_area)
+    
 
 
 def largestContour(image):
@@ -108,6 +174,19 @@ def show_all_contours(processed, display_image=False, min_size=100):
         cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
         show(im,'contour sides:{}, area:{}'.format(len(approx(cnt)), cv2.contourArea(cnt)))
     return None
+
+def resize_and_fill(image, size):
+    height, width = get_size(image)
+    if height > width:
+        target_height = size
+        target_width = int(math.ceil(width / height) * size))
+    else:
+        target_width = size
+        target_height = int(math.ceil(height / width) * size))
+
+
+    # resize the image
+    return cv2.resize(image, (target_width, target_height), interpolation = inter)
 
 def make_it_square(image, side_length=306):
     return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
@@ -173,6 +252,9 @@ def convert_to_grayscale(image):
 
 def blur(image, pixels):
     return cv2.GaussianBlur(image, (pixels, pixels), 0)
+
+def get_size(image):
+    return cv2.GetSize(image)
 
 def warp_perspective(rect, grid, size="letter", verbose=False):
     (tl, tr, br, bl) = rect
@@ -297,4 +379,35 @@ def ellipse_morph(image, size=2):
     return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
 
 
+def get_blob_detector():
+    params = cv2.SimpleBlobDetector_Params()
     
+    # Change thresholds
+    params.minThreshold = 240
+    params.maxThreshold = 255
+    
+    # Filter by Area.
+    params.filterByArea = False
+    params.minArea = 5
+    
+    # Filter by Circularity
+    params.filterByCircularity = False
+    #params.minCircularity = 0.1
+    
+    # Filter by Convexity
+    params.filterByConvexity = False
+    #params.minConvexity = 0.87
+    
+    # Filter by Inertia
+    params.filterByInertia = False
+    params.minInertiaRatio = 0.01
+    
+    # Create a detector with the parameters
+    detector = cv2.SimpleBlobDetector_create(params)
+
+    # Detect blobs.
+    keypoints = detector.detect(thresh)
+
+def show_blobs():
+    im_with_keypoints = cv2.drawKeypoints(cell, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    Helpers.show(im_with_keypoints, "clean cell")

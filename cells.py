@@ -12,8 +12,8 @@ class Cells(object):
     from the Extractor
     '''
 
-    def __init__(self, path, show_steps=False):
-        self.image = Helpers.loadImage(path)
+    def __init__(self, image, show_steps=False):
+        self.image = image
 
         
         # build the prepocessing pipleine
@@ -28,96 +28,47 @@ class Cells(object):
 
         self.cells = self.extractCells(processed_image, self.image)
 
-        for cell in self.cells:
-            print(cell.shape)
+        cell_pipeline = Pipeline([
+            lambda image: Helpers.convert_to_grayscale(image),
+            lambda image: Helpers.thresholdify(image),
+            lambda image: Helpers.ellipse_morph(image ,1)
+        ])
+
+        answer_text = {}
+
+        for num, cell in enumerate(self.cells):
+            # clean the cell
             gray = Helpers.convert_to_grayscale(cell)
-            #blur = Helpers.blur(gray, 3)
-            
-            thresh = Helpers.thresholdify(gray)
-            thresh = Helpers.ellipse_morph(thresh, 1)
-            #cell = Helpers.ellipse_morph(cell)
+            thresh  = cell_pipeline.process_pipeline(cell)
 
-            #corners = Helpers.get_corners(thresh)
-            contour = Helpers.largest4SideContour(thresh, show=False, display_image=None)
-            centerX, centerY = Helpers.get_centers_of_contour(contour)
-            cv2.circle(cell, (centerX, centerY), 2, (0, 128, 255), -1)
-            app = Helpers.approx(contour)
-            corners = Helpers.get_rectangle_corners(app)
-            avg_color_per_row = np.average(gray, axis=0)
-            avg_color = np.average(avg_color_per_row, axis=0)
-            
-            for i in range(len(corners)):
-                cX, cY = corners[i]
-                cX, cY = int(cX), int(cY)
-                # while we are on black, step towards the center
-                n = 0
-                print(gray[cY][cX])    
-                while(gray[cY][cX] < avg_color):
-                    n += 1
-                    diff = centerX-cX
-                    step = diff // abs(diff)
+            corners = self.find_corners_inside_largest_contour(thresh, gray)
 
-                    cX += step
-
-                    diff = centerY-cY
-                    step = diff // abs(diff)
-
-                    cY += step
-                corners[i] = [cX, cY]
-                
-                cv2.circle(cell, (cX, cY), 2, (0, 128, 255), -1)
-
-            #cell = Helpers.dilate(cell, 3)
-            #cell = Helpers.thresholdify(cell)
-            
             warp = Helpers.warp_perspective(corners, gray, size="same", verbose=False)
             Helpers.show(warp, "clean cell")
+
+            # find the contour of the text
             warp = Helpers.dilate(warp, 1)
             blur = Helpers.blur(warp, 3)
             
-            #thresh = Helpers.thresholdify(warp)
-            ret, thresh = cv2.threshold(blur, 0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-            Helpers.show(thresh, "clean cell")
-            '''
-            # Setup SimpleBlobDetector parameters.
-            params = cv2.SimpleBlobDetector_Params()
+            thresh = cv2.threshold(blur, 0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
 
-            # Change thresholds
-            #params.minThreshold = 10
-            #params.maxThreshold = 200
-            
-            # Filter by Area.
-            params.filterByArea = True
-            params.minArea = 100
-            
-            # Filter by Circularity
-            params.filterByCircularity = False
-            params.minCircularity = 0.1
-            
-            # Filter by Convexity
-            params.filterByConvexity = True
-            params.minConvexity = 0.87
-            
-            # Filter by Inertia
-            params.filterByInertia = True
-            params.minInertiaRatio = 0.01
+            contours = Helpers.find_contours(255-thresh, mode_type="external", min_area=20)
 
-            # Create a detector with the parameters
-            ver = (cv2.__version__).split('.')
-            if int(ver[0]) < 3 :
-                detector = cv2.SimpleBlobDetector(params)
-            else : 
-                detector = cv2.SimpleBlobDetector_create(params)
-            keypoints = detector.detect(thresh)
-            print(len(keypoints)) 
-            im_with_keypoints = cv2.drawKeypoints(thresh, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-            '''
-            # Show blobs
-            cv2.imshow("Keypoints", im_with_keypoints)
+            contours = Helpers.sort_contours(contours, method="left-to_right")
+
+            rects = []
+            for contour in contours:
+                rect = Helpers.cut_out_rect(warp, contour)
+                rects.append(rect)
+            answer_text[num] = rects
+        
+        
 
         if show_steps:
             Helpers.show(self.image, "start")
             Helpers.show(processed_image, "processed")
+        
+        self.answer_text = answer_text
 
 
     def extractCells(self, processed, display_image, count=14, min_size=4000, max_size=8000):
@@ -165,6 +116,43 @@ class Cells(object):
 
 
 
+    def find_corners_inside_largest_contour(self, thresh, gray):
+
+        # find the largest contour
+        contour = Helpers.largest4SideContour(thresh, show=False, display_image=None)
+        # find its center
+        centerX, centerY = Helpers.get_centers_of_contour(contour)
+        app = Helpers.approx(contour)
+
+        # find its corners
+        corners = Helpers.get_rectangle_corners(app)
+
+        # find the average color of the image
+        avg_color_per_row = np.average(gray, axis=0)
+        avg_color = np.average(avg_color_per_row, axis=0)
+        
+        # for each corner, move the corner's coordinates towards the center until you find a 
+        # white spot (a spot where the color is less than the average color)
+        for i in range(len(corners)):
+            cX, cY = corners[i]
+            cX, cY = int(cX), int(cY)
+            # while we are on black, step towards the center
+            n = 0
+
+            while gray[cY][cX] < avg_color:
+                n += 1
+                diff = centerX-cX
+                step = diff // abs(diff)
+                cX += step
+
+                diff = centerY-cY
+                step = diff // abs(diff)
+                cY += step
+            corners[i] = [cX, cY]
+
+        # return the new found corners
+        return corners
+
 
 
     def clean(self, cell):
@@ -204,4 +192,5 @@ class Cells(object):
         return digit
 
 if __name__ == '__main__':
-    ext = Cells('images/processed_org2.png', True)
+    image = Helpers.loadImage('images/processed_org2.png')
+    ext = Cells(image, True)
