@@ -180,24 +180,43 @@ def show_all_contours(processed, display_image=False, min_size=100):
 def round_to_multiple(x, base=5):
     return int(base * round(float(x)/base))
 
-def resize_and_fill(image, size, border_size=2):
+def resize_and_fill(image, size, border_size=4):
+    new_image = np.zeros((size, size))
+
     height, width = get_size(image)
+    
     image_size = size - border_size * 2
     if height > width:
         target_height = image_size
         target_width = round_to_multiple(int(math.ceil(width / height * image_size)), 2)
-        top = bottom = border_size
-        left = right = (size - target_width) // 2
+        top = bottom = 0
+        left = right = (image_size - target_width) // 2
     else:
         target_width = image_size
         target_height = round_to_multiple(int(math.ceil(height / width * image_size)), 2)
-        top = bottom = (size - target_width) // 2
-        left = right = border_size
+        top = bottom = (image_size - target_height) // 2
+        left = right = 0
 
     # resize the image
     resized = cv2.resize(image, (target_width, target_height), interpolation = cv2.INTER_AREA)
     with_border = cv2.copyMakeBorder(resized, top, bottom, right, left, cv2.BORDER_CONSTANT,value=0)
-    return with_border
+    
+    contour = largestContour(with_border)
+    cX, cY = get_centers_of_contour(contour)
+    x_shift = cX - image_size//2
+    y_shift = cY - image_size//2
+    if abs(x_shift) > border_size or abs(y_shift) > border_size:
+        raise ValueError("Can't shift the image that much")
+    start_x = border_size - x_shift
+    start_y = border_size - y_shift
+
+    new_image[start_y:start_y + image_size, start_x:start_x + image_size] = with_border[0:image_size, 0:image_size]
+    
+    cX, cY = get_centers_of_contour(new_image)
+    print(cX, cY)
+
+    return new_image
+
 
 def make_it_square(image, side_length=306):
     return cv2.resize(image, (side_length, int(side_length * (11/8.5))))

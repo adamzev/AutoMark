@@ -6,7 +6,7 @@ from ocr import OCR
 
 ext = Extractor('images/BCBA8F9752.jpg', False)
 
-final = ext.final 
+final = ext.final
 #Helpers.show(final)
 
 cells = Cells(final)
