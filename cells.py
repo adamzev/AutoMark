@@ -1,10 +1,11 @@
-import numpy as np
-import cv2
 import pickle
 
+import cv2
 import helpers as Helpers
+import numpy as np
 from digit import Digit
 from pipeline import Pipeline
+
 
 class Cells(object):
     '''
@@ -44,7 +45,7 @@ class Cells(object):
             corners = self.find_corners_inside_largest_contour(thresh, gray)
 
             warp = Helpers.warp_perspective(corners, gray, size="same", verbose=False)
-            Helpers.show(warp, "clean cell")
+            #Helpers.show(warp, "clean cell")
 
             # find the contour of the text
             warp = Helpers.dilate(warp, 1)
@@ -86,7 +87,7 @@ class Cells(object):
         sorted_rects = self.sort_by_problem_num(rects, contours)
         #for i, rect in enumerate(sorted_rects):
             #Helpers.show(rect, str(i+1))
-        return rects
+        return sorted_rects
 
     
     def sort_by_problem_num(self, rects, contours):

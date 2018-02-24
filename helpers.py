@@ -1,6 +1,8 @@
+import math
+
 import cv2
 import numpy as np
-import math
+
 
 '''
 Image manipulation helper functions
@@ -51,8 +53,8 @@ def get_sorted_contours(processed, sort_by='area'):
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     if sort_by == "area":
         return sorted(contours, key=cv2.contourArea, reverse=True)
-    elif sort_by == "left-to-right":
-        return contours.sort_contours(refCnts, method="left-to-right")[0]
+    #elif sort_by == "left-to-right":
+        #return contours.sort_contours(contours, method="left-to-right")[0]
     else:
         raise ValueError("Sort by {} is not implemented".format(sort_by))
 
@@ -175,18 +177,27 @@ def show_all_contours(processed, display_image=False, min_size=100):
         show(im,'contour sides:{}, area:{}'.format(len(approx(cnt)), cv2.contourArea(cnt)))
     return None
 
-def resize_and_fill(image, size):
-    height, width = get_size(image)
-    if height > width:
-        target_height = size
-        target_width = int(math.ceil(width / height) * size))
-    else:
-        target_width = size
-        target_height = int(math.ceil(height / width) * size))
+def round_to_multiple(x, base=5):
+    return int(base * round(float(x)/base))
 
+def resize_and_fill(image, size, border_size=2):
+    height, width = get_size(image)
+    image_size = size - border_size * 2
+    if height > width:
+        target_height = image_size
+        target_width = round_to_multiple(int(math.ceil(width / height * image_size)), 2)
+        top = bottom = border_size
+        left = right = (size - target_width) // 2
+    else:
+        target_width = image_size
+        target_height = round_to_multiple(int(math.ceil(height / width * image_size)), 2)
+        top = bottom = (size - target_width) // 2
+        left = right = border_size
 
     # resize the image
-    return cv2.resize(image, (target_width, target_height), interpolation = inter)
+    resized = cv2.resize(image, (target_width, target_height), interpolation = cv2.INTER_AREA)
+    with_border = cv2.copyMakeBorder(resized, top, bottom, right, left, cv2.BORDER_CONSTANT,value=0)
+    return with_border
 
 def make_it_square(image, side_length=306):
     return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
@@ -254,7 +265,7 @@ def blur(image, pixels):
     return cv2.GaussianBlur(image, (pixels, pixels), 0)
 
 def get_size(image):
-    return cv2.GetSize(image)
+    return image.shape[0:2]
 
 def warp_perspective(rect, grid, size="letter", verbose=False):
     (tl, tr, br, bl) = rect
