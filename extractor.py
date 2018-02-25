@@ -14,15 +14,15 @@ class Extractor(object):
         all the way to the cells
     '''
 
-    def __init__(self, path, show_steps=False):
+    def __init__(self, path, show_steps=False, save=False):
         self.image = Helpers.loadImage(path)
         
         # build the prepocessing pipleine
         pipeline = Pipeline([
-            lambda image: Helpers.convert_to_grayscale(image),
+            Helpers.convert_to_grayscale,
             lambda image: Helpers.blur(image, 5),
-            lambda image: Helpers.thresholdify(image),
-            lambda image: Helpers.ellipse_morph(image)
+            Helpers.thresholdify,
+            Helpers.ellipse_morph
         ])
 
         processed_image = pipeline.process_pipeline(self.image)
@@ -45,15 +45,9 @@ class Extractor(object):
         
         self.final = straigtened_image
 
-        #processed_straight_image = self.process_pipeline(straigtened_image, preprocess_pipeline)
-        
-        #self.get_rectangles(processed_straight_image, straigtened_image, count=14)
-        '''self.gray2, self.thresh2, self.morph2 = self.preprocess(self.warp)
-        Helpers.show(self.gray2, 'post processed gray')
-        Helpers.show(self.thresh2, 'post processed tresh')
-        Helpers.show(self.morph2, 'post processed morph')
-        #cv2.imwrite('processed_org2.png', self.gray2)
-        '''
+        if save:
+            cv2.imwrite('processed_org2.png', self.gray2)
+
 
 
 

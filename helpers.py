@@ -89,7 +89,7 @@ def filter_contours(contours, sides=None, min_area=None, max_area=None):
     for contour in contours:
         valid = True
         if sides:
-            n_sides = len(approx(contour))
+            n_sides = len(approx(contour, 0.05))
             if n_sides not in sides:
                 valid = False
         if min_area and cv2.contourArea(contour) < min_area:
@@ -213,7 +213,6 @@ def resize_and_fill(image, size, border_size=4):
     new_image[start_y:start_y + image_size, start_x:start_x + image_size] = with_border[0:image_size, 0:image_size]
     
     cX, cY = get_centers_of_contour(new_image)
-    print(cX, cY)
 
     return new_image
 
@@ -246,9 +245,12 @@ def binarized(image):
             image[i][j] = 255 * int(image[i][j] != 255)
     return image
 
-def approx(cnt):
+def approx(cnt, perc_of_arc=0.01):
+    ''' cnt: opencv contour
+        perc_of_arc: see https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
+    '''
     peri = cv2.arcLength(cnt, True)
-    app = cv2.approxPolyDP(cnt, 0.01 * peri, True)
+    app = cv2.approxPolyDP(cnt, perc_of_arc * peri, True)
     return app
 
 def get_corners(processed_image):

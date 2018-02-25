@@ -1,15 +1,17 @@
 # http://hanzratech.in/2015/02/24/handwritten-digit-recognition-using-opencv-sklearn-and-python.html
 # Import the modules
 import cv2
-import helpers as Helpers
 import numpy as np
-import pytesseract
-from skimage.feature import hog
-from sklearn.externals import joblib
-import models
+#import keras
+
+#from keras.losses import categorical_crossentropy
+#from keras.optimizers import Adadelta
+import helpers as Helpers
+#import models
+
 
 class OCR(object):
-    def __init__(self, image):
+    def __init__(self, image, model):
         # Load the classifier
         
         '''The original black and white (bilevel) images from 
@@ -27,16 +29,21 @@ class OCR(object):
         
         images/=255
 
-        model = models.create_model()
-        model.load_weights('cnn_mnist.h5')
+        #model = models.create_model()
+
+        
+        '''
+        model.compile(loss=keras.losses.categorical_crossentropy,
+              optimizer=keras.optimizers.Adadelta(),
+              metrics=['accuracy'])
+        '''
+
         result = model.predict(images, batch_size=1, verbose=0)
         result = list(result[0])
-        for i, r in enumerate(result):
-            if r > 0.01:
-                print(i, round(r, 2))
-        self.value = result.index(max(result))
-        Helpers.show(im, str(self.value))
 
+        sorted_result = sorted(result, reverse=True)
+        self.confidence = sorted_result[0]
+        self.value = result.index(sorted_result[0])
+        self.secondary_value = result.index(sorted_result[1])
+        self.secondary_confidence = sorted_result[1]
 
-
-#print(pytesseract.image_to_string(img))

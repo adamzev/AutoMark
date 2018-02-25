@@ -16,23 +16,23 @@ class Cells(object):
     def __init__(self, image, show_steps=False):
         self.image = image
 
-        
+
         # build the prepocessing pipleine
         pipeline = Pipeline([
-            lambda image: Helpers.convert_to_grayscale(image),
+            Helpers.convert_to_grayscale,
             lambda image: Helpers.blur(image, 5),
-            lambda image: Helpers.thresholdify(image),
-            lambda image: Helpers.ellipse_morph(image)
+            Helpers.thresholdify,
+            Helpers.ellipse_morph
         ])
-        
+
         processed_image = pipeline.process_pipeline(self.image)
 
-        self.cells = self.extractCells(processed_image, self.image)
+        self.cells = self.extract_cells(processed_image, self.image)
 
         cell_pipeline = Pipeline([
-            lambda image: Helpers.convert_to_grayscale(image),
-            lambda image: Helpers.thresholdify(image),
-            lambda image: Helpers.ellipse_morph(image ,1)
+            Helpers.convert_to_grayscale,
+            Helpers.thresholdify,
+            lambda image: Helpers.ellipse_morph(image, 1)
         ])
 
         answer_text = {}
@@ -40,7 +40,7 @@ class Cells(object):
         for num, cell in enumerate(self.cells):
             # clean the cell
             gray = Helpers.convert_to_grayscale(cell)
-            thresh  = cell_pipeline.process_pipeline(cell)
+            thresh = cell_pipeline.process_pipeline(cell)
 
             corners = self.find_corners_inside_largest_contour(thresh, gray)
 
@@ -50,8 +50,8 @@ class Cells(object):
             # find the contour of the text
             warp = Helpers.dilate(warp, 1)
             blur = Helpers.blur(warp, 3)
-            
-            thresh = cv2.threshold(blur, 0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+
+            thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
 
             contours = Helpers.find_contours(255-thresh, mode_type="external", min_area=20)
 
@@ -62,20 +62,19 @@ class Cells(object):
                 rect = Helpers.cut_out_rect(warp, contour)
                 rects.append(rect)
             answer_text[num] = rects
-        
-        
 
         if show_steps:
             Helpers.show(self.image, "start")
             Helpers.show(processed_image, "processed")
-        
+
         self.answer_text = answer_text
 
 
-    def extractCells(self, processed, display_image, count=14, min_size=4000, max_size=8000):
+    def extract_cells(self, processed, display_image, count=14, min_size=4000, max_size=8000):
 
         contours = Helpers.get_sorted_contours(processed, sort_by="area")
-        contours = Helpers.filter_contours(contours, sides=[4, 5], min_area=4000, max_area=8000)
+
+        contours = Helpers.filter_contours(contours, sides=[4], min_area=4000, max_area=8000)
 
         # get just the count biggest contours
         contours = contours[:count]
@@ -84,9 +83,13 @@ class Cells(object):
         for contour in contours:
             rects.append(Helpers.cut_out_rect(display_image, contour))
 
-        sorted_rects = self.sort_by_problem_num(rects, contours)
+        sorted_rects, sorted_contours = self.sort_by_problem_num(rects, contours)
+
+        self.sorted_contours = sorted_contours
+
         #for i, rect in enumerate(sorted_rects):
             #Helpers.show(rect, str(i+1))
+
         return sorted_rects
 
     
@@ -97,23 +100,31 @@ class Cells(object):
             centers.append(Helpers.get_centers_of_contour(contour))
 
         # sort by the y value of the centers
-        rects_centers = [(r, c) for r, c in sorted(zip(rects, centers), key=lambda pair: pair[1][1])]
+        rects_centers = [(r, c, contour) for r, c, contour in sorted(zip(rects, centers, contours), key=lambda pair: pair[1][1])]
 
         # sort pairs by the x value
         sorted_rects = []
+        sorted_contours = []
+
+
+        # index 0 is the rect, index 1 is the center, index 2 is the contour
         for i in range(0, len(rects), 2):
             # if there is only one rect left, append it
             if i+1 > len(rects_centers):
-                sorted_rects.append(rects_centers[i])
+                sorted_rects.append(rects_centers[i][0])
+                sorted_contours.append(rects_centers[i][2])
+
             elif rects_centers[i][1] < rects_centers[i+1][1]:
                 sorted_rects.extend([rects_centers[i][0], rects_centers[i+1][0]])
+                sorted_contours.extend([rects_centers[i][2], rects_centers[i+1][2]])
             else:
                 sorted_rects.extend([rects_centers[i+1][0], rects_centers[i][0]])
-        return sorted_rects
-    
-    def save_files(rects):
-        for rect in enumerate(rects):
-            Helpers.save_image("rect{}.png".format(str(i+1), rect))
+                sorted_contours.extend([rects_centers[i+1][2], rects_centers[i][2]])
+        return sorted_rects, sorted_contours
+
+    def save_files(self, rects):
+        for i, rect in enumerate(rects):
+            Helpers.save_image("rect{}.png".format(str(i+1)), rect)
 
 
 
