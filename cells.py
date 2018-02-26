@@ -1,8 +1,7 @@
-import pickle
-
 import cv2
-import helpers as Helpers
 import numpy as np
+
+import helpers as Helpers
 from pipeline import Pipeline
 
 
@@ -133,7 +132,7 @@ class Cells(object):
     def find_corners_inside_largest_contour(self, thresh, gray):
 
         # find the largest contour
-        contour = Helpers.largest4SideContour(thresh)
+        contour = Helpers.largest_4_sided_contour(thresh)
         # find its center
         centerX, centerY = Helpers.get_centers_of_contour(contour)
         app = Helpers.approx(contour)
@@ -170,5 +169,5 @@ class Cells(object):
 
 
 if __name__ == '__main__':
-    image = Helpers.loadImage('images/processed_org2.png')
+    image = Helpers.load_image('images/processed_org2.png')
     ext = Cells(image, True)

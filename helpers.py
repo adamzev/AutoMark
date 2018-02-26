@@ -24,7 +24,7 @@ def show(img, windowName='Image'):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def loadImage(path):
+def load_image(path):
     print(path)
     color_img = cv2.imread(path)
     if color_img is None:
@@ -32,15 +32,13 @@ def loadImage(path):
     print('Image loaded.')
     return color_img
 
-def isCv2():
+def is_cv2():
     return cv2.__version__.startswith('2.')
         
 def thresholdify(img):
     img = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                 cv2.THRESH_BINARY, 11, 2)
     return 255 - img
-
-
 
 
 def get_sorted_contours(processed, sort_by='area'):
@@ -135,8 +133,8 @@ def find_contours(image, mode_type="default", method_type="default", min_area=20
     
 
 
-def largestContour(image):
-    if isCv2():
+def largest_contour(image):
+    if is_cv2():
         contours, h = cv2.findContours(
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     else:
@@ -144,7 +142,7 @@ def largestContour(image):
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return max(contours, key=cv2.contourArea)
 
-def largest4SideContour(processed, show_contours=False, display_image=None):
+def largest_4_sided_contour(processed, show_contours=False, display_image=None):
     im2, contours, h = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -180,7 +178,7 @@ def resize_and_fill(image, size, border_size=4):
     new_image = np.zeros((size, size))
 
     height, width = get_size(image)
-    
+
     image_size = size - border_size * 2
     if height > width:
         target_height = image_size
@@ -197,7 +195,7 @@ def resize_and_fill(image, size, border_size=4):
     resized = cv2.resize(image, (target_width, target_height), interpolation = cv2.INTER_AREA)
     with_border = cv2.copyMakeBorder(resized, top, bottom, right, left, cv2.BORDER_CONSTANT,value=0)
     
-    contour = largestContour(with_border)
+    contour = largest_contour(with_border)
     cX, cY = get_centers_of_contour(contour)
     x_shift = cX - image_size//2
     y_shift = cY - image_size//2
@@ -253,7 +251,7 @@ def approx(cnt, perc_of_arc=0.01):
 
 def get_corners(processed_image):
     ''' gets corners from the largest quadrlateral in an image '''
-    largest = largestContour(processed_image)
+    largest = largest_contour(processed_image)
     app = approx(largest)
     corners = get_rectangle_corners(app)
     return corners

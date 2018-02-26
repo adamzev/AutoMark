@@ -15,7 +15,7 @@ class Extractor(object):
     '''
 
     def __init__(self, path, show_steps=False, save=False):
-        self.image = Helpers.loadImage(path)
+        self.image = Helpers.load_image(path)
         
         # build the prepocessing pipleine
         pipeline = Pipeline([
@@ -28,7 +28,7 @@ class Extractor(object):
         processed_image = pipeline.process_pipeline(self.image)
 
         # get the contour, crop it out, find the corners and straighten
-        contour = Helpers.largestContour(processed_image)
+        contour = Helpers.largest_contour(processed_image)
         processed_image_cropped = Helpers.cut_out_rect(processed_image, contour)
         corners = Helpers.get_corners(processed_image_cropped)
         
