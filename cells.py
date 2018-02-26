@@ -15,7 +15,7 @@ class Cells(object):
 
     def __init__(self, image, show_steps=False):
         self.image = image
-
+        self.show_steps = show_steps
 
         # build the prepocessing pipleine
         pipeline = Pipeline([
@@ -70,11 +70,13 @@ class Cells(object):
         self.answer_text = answer_text
 
 
-    def extract_cells(self, processed, display_image, count=14, min_size=4000, max_size=8000):
-
+    def extract_cells(self, processed, display_image, count=14):
+        page_area = Helpers.area(processed)
+        min_percent = 0.0012
+        max_percent = 0.0020
         contours = Helpers.get_sorted_contours(processed, sort_by="area")
 
-        contours = Helpers.filter_contours(contours, sides=[4], min_area=4000, max_area=8000)
+        contours = Helpers.filter_contours(contours, sides=[4], min_area=page_area*min_percent, max_area=page_area*max_percent)
 
         # get just the count biggest contours
         contours = contours[:count]
@@ -87,8 +89,9 @@ class Cells(object):
 
         self.sorted_contours = sorted_contours
 
-        #for i, rect in enumerate(sorted_rects):
-            #Helpers.show(rect, str(i+1))
+        if self.show_steps:
+            for i, rect in enumerate(sorted_rects):
+                Helpers.show(rect, str(i+1))
 
         return sorted_rects
 
@@ -131,7 +134,7 @@ class Cells(object):
     def find_corners_inside_largest_contour(self, thresh, gray):
 
         # find the largest contour
-        contour = Helpers.largest4SideContour(thresh, show=False, display_image=None)
+        contour = Helpers.largest4SideContour(thresh)
         # find its center
         centerX, centerY = Helpers.get_centers_of_contour(contour)
         app = Helpers.approx(contour)

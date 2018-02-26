@@ -50,7 +50,7 @@ def dilate(image, kernel):
 
 def get_sorted_contours(processed, sort_by='area'):
     im2, contours, h = cv2.findContours(
-        processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if sort_by == "area":
         return sorted(contours, key=cv2.contourArea, reverse=True)
     #elif sort_by == "left-to-right":
@@ -149,16 +149,17 @@ def largestContour(image):
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return max(contours, key=cv2.contourArea)
 
-def largest4SideContour(processed, show=False, display_image=None):
+def largest4SideContour(processed, show_contours=False, display_image=None):
     im2, contours, h = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
     for cnt in contours[:min(5,len(contours))]:
-        if show:
-            im = display_image.copy()
+        if show_contours:
+            im = processed.copy()
+            im = cv2.cvtColor(im,  cv2.COLOR_GRAY2BGR)
             cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
-            show(im,'contour')
+            show(im,'contour {}'.format(len(approx(cnt))))
         if len(approx(cnt)) == 4:
             return cnt
     return None
@@ -206,7 +207,13 @@ def resize_and_fill(image, size, border_size=4):
     x_shift = cX - image_size//2
     y_shift = cY - image_size//2
     if abs(x_shift) > border_size or abs(y_shift) > border_size:
-        raise ValueError("Can't shift the image that much")
+        print(x_shift, y_shift)
+        print("large shift")
+        x_shift = min(x_shift, 4)
+        x_shift = max(x_shift, -4)
+        y_shift = min(y_shift, 4)
+        y_shift = max(y_shift, -4)
+        print(x_shift, y_shift)
     start_x = border_size - x_shift
     start_y = border_size - y_shift
 
@@ -255,14 +262,15 @@ def approx(cnt, perc_of_arc=0.01):
 
 def get_corners(processed_image):
     ''' gets corners from the largest quadrlateral in an image '''
-    largest = largest4SideContour(processed_image)
+    largest = largestContour(processed_image)
     app = approx(largest)
     corners = get_rectangle_corners(app)
     return corners
 
 def get_rectangle_corners(cnt):
     ''' gets corners from a contour '''
-    pts = cnt.reshape(4, 2)
+    
+    pts = cnt.reshape(cnt.shape[0], 2)
     rect = np.zeros((4, 2), dtype="float32")
 
     # the top-left point has the smallest sum whereas the
