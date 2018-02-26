@@ -9,7 +9,7 @@ Image manipulation helper functions
 code adpated from https://github.com/prajwalkr/SnapSudoku/
 '''
 
-def show(img, windowName='Image'):
+def show(img, window_name='Image'):
     screen_res = 1280.0, 720.0
     scale_width = screen_res[0] / img.shape[1]
     scale_height = screen_res[1] / img.shape[0]
@@ -17,10 +17,10 @@ def show(img, windowName='Image'):
     window_width = int(img.shape[1] * scale)
     window_height = int(img.shape[0] * scale)
 
-    cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(windowName, window_width, window_height)
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, window_width, window_height)
 
-    cv2.imshow(windowName, img)
+    cv2.imshow(window_name, img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -34,7 +34,7 @@ def load_image(path):
 
 def is_cv2():
     return cv2.__version__.startswith('2.')
-        
+
 def thresholdify(img):
     img = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                 cv2.THRESH_BINARY, 11, 2)
@@ -42,7 +42,7 @@ def thresholdify(img):
 
 
 def get_sorted_contours(processed, sort_by='area'):
-    im2, contours, h = cv2.findContours(
+    _, contours, _ = cv2.findContours(
         processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if sort_by == "area":
         return sorted(contours, key=cv2.contourArea, reverse=True)
@@ -64,15 +64,16 @@ def sort_contours(contours, method="left-to-right"):
     # handle if we are sorting against the y-coordinate rather than
     # the x-coordinate of the bounding box
     if method == "top-to-bottom" or method == "bottom-to-top":
-        i = 1
+        index = 1
 
     centers = []
     for contour in contours:
         centers.append(get_centers_of_contour(contour))
 
     # sort by the y value of the centers
-    sorted_contours = [contour for contour, center in sorted(zip(contours, centers), key=lambda pair: pair[1][index], reverse=reverse)]
- 
+    sorted_contours = [contour for contour, center in sorted(zip(contours, centers), \
+                        key=lambda pair: pair[1][index], reverse=reverse)]
+
     # return the list of sorted contours and bounding boxes
     return sorted_contours
 
@@ -86,9 +87,9 @@ def filter_contours(contours, sides=None, min_area=None, max_area=None):
             if n_sides not in sides:
                 valid = False
         if min_area and cv2.contourArea(contour) < min_area:
-            valid= False
+            valid = False
         if max_area and cv2.contourArea(contour) > max_area:
-            valid= False
+            valid = False
         if valid:
             result.append(contour)
     return result
@@ -96,69 +97,77 @@ def filter_contours(contours, sides=None, min_area=None, max_area=None):
 def save_image(full_path, image):
     cv2.imwrite(full_path, image)
 
+def save_images(folder, prefix, images):
+    for i, image in enumerate(images):
+        save_image("{}{}{}.png".format(folder, prefix, str(i+1)), image)
 
 def find_contours(image, mode_type="default", method_type="default", min_area=20):
     '''
-        RETR_EXTERNAL: retrieves only the extreme outer contours. 
+        RETR_EXTERNAL: retrieves only the extreme outer contours.
 
-        RETR_LIST: retrieves all of the contours without establishing any hierarchical relationships.
+        RETR_LIST: retrieves all of the contours without establishing any hierarchical
+            relationships.
 
-        RETR_TREE: retrieves all of the contours and reconstructs a full hierarchy of nested contours.
+        RETR_TREE: retrieves all of the contours and reconstructs a full hierarchy
+            of nested contours.
 
-        RETR_FLOODFILL 
+        RETR_FLOODFILL
 
-        CHAIN_APPROX_SIMPLE  compresses horizontal, vertical, and diagonal segments and leaves only their end points. 
+        CHAIN_APPROX_SIMPLE  compresses horizontal, vertical, and diagonal segments
+            and leaves only their end points.
 
-        CHAIN_APPROX_TC89_L1 applies one of the flavors of the Teh-Chin chain approximation algorithm [168]
+        CHAIN_APPROX_TC89_L1 applies one of the flavors of the Teh-Chin chain
+            approximation algorithm [168]
 
-        CHAIN_APPROX_TC89_KCOS 	applies one of the flavors of the Teh-Chin chain approximation algorithm [168]
+        CHAIN_APPROX_TC89_KCOS 	applies one of the flavors of the Teh-Chin chain
+            approximation algorithm [168]
 
     '''
-    
+
     mode = cv2.RETR_TREE
     method = cv2.CHAIN_APPROX_SIMPLE
 
     if mode_type == "external":
         mode = cv2.RETR_EXTERNAL
-    
+
     if method_type == "Teh-Chin":
         method = cv2.CHAIN_APPROX_TC89_L1
-    
+
     if method_type == "Teh-Chin2":
         method = cv2.CHAIN_APPROX_TC89_KCOS
-    
+
     contours = cv2.findContours(image, mode=mode, method=method)[1]
 
     return filter_contours(contours, min_area=min_area)
-    
+
 
 
 def largest_contour(image):
     if is_cv2():
-        contours, h = cv2.findContours(
+        contours, _ = cv2.findContours(
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     else:
-        _, contours, h = cv2.findContours(
+        _, contours, _ = cv2.findContours(
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return max(contours, key=cv2.contourArea)
 
 def largest_4_sided_contour(processed, show_contours=False, display_image=None):
-    im2, contours, h = cv2.findContours(
+    _, contours, _ = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-    for cnt in contours[:min(5,len(contours))]:
+    for cnt in contours[:min(5, len(contours))]:
         if show_contours:
-            im = processed.copy()
-            im = cv2.cvtColor(im,  cv2.COLOR_GRAY2BGR)
-            cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
-            show(im,'contour {}'.format(len(approx(cnt))))
+            img = processed.copy()
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            cv2.drawContours(img, [cnt], -1, (0, 255, 120), 5)
+            show(img, 'contour {}'.format(len(approx(cnt))))
         if len(approx(cnt)) == 4:
             return cnt
     return None
 
 def show_all_contours(processed, display_image=False, min_size=100):
-    im2, contours, h = cv2.findContours(
+    _, contours, _ = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
     if not display_image.any():
@@ -166,9 +175,9 @@ def show_all_contours(processed, display_image=False, min_size=100):
     for cnt in contours:
         if cv2.contourArea(cnt) < min_size:
             break
-        im = display_image.copy()
-        cv2.drawContours(im, [cnt], -1, (0,255,120), 5)
-        show(im,'contour sides:{}, area:{}'.format(len(approx(cnt)), cv2.contourArea(cnt)))
+        img = display_image.copy()
+        cv2.drawContours(img, [cnt], -1, (0, 255, 120), 5)
+        show(img, 'contour sides:{}, area:{}'.format(len(approx(cnt)), cv2.contourArea(cnt)))
     return None
 
 def round_to_multiple(x, base=5):
@@ -192,9 +201,10 @@ def resize_and_fill(image, size, border_size=4):
         left = right = 0
 
     # resize the image
-    resized = cv2.resize(image, (target_width, target_height), interpolation = cv2.INTER_AREA)
-    with_border = cv2.copyMakeBorder(resized, top, bottom, right, left, cv2.BORDER_CONSTANT,value=0)
-    
+    resized = cv2.resize(image, (target_width, target_height), interpolation=cv2.INTER_AREA)
+    with_border = cv2.copyMakeBorder(resized, top, bottom, right, left, \
+                                        cv2.BORDER_CONSTANT, value=0)
+
     contour = largest_contour(with_border)
     cX, cY = get_centers_of_contour(contour)
     x_shift = cX - image_size//2
@@ -210,8 +220,9 @@ def resize_and_fill(image, size, border_size=4):
     start_x = border_size - x_shift
     start_y = border_size - y_shift
 
-    new_image[start_y:start_y + image_size, start_x:start_x + image_size] = with_border[0:image_size, 0:image_size]
-    
+    new_image[start_y:start_y + image_size, start_x:start_x + image_size] = \
+        with_border[0:image_size, 0:image_size]
+
     cX, cY = get_centers_of_contour(new_image)
 
     return new_image
@@ -258,7 +269,7 @@ def get_corners(processed_image):
 
 def get_rectangle_corners(cnt):
     ''' gets corners from a contour '''
-    
+
     pts = cnt.reshape(cnt.shape[0], 2)
     rect = np.zeros((4, 2), dtype="float32")
 
@@ -286,31 +297,35 @@ def get_size(image):
     return image.shape[0:2]
 
 def warp_perspective(rect, grid, size="letter", verbose=False):
-    (tl, tr, br, bl) = rect
-    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    (top_left, top_right, bottom_right, bottom_left) = rect
+    width_a = np.sqrt(((bottom_right[0] - bottom_left[0]) ** 2) + \
+                    ((bottom_right[1] - bottom_left[1]) ** 2))
+    width_b = np.sqrt(((top_right[0] - top_left[0]) ** 2) + \
+                    ((top_right[1] - top_left[1]) ** 2))
 
     # ...and now for the height of our new image
-    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    height_a = np.sqrt(((top_right[0] - bottom_right[0]) ** 2) + \
+                        ((top_right[1] - bottom_right[1]) ** 2))
+    height_b = np.sqrt(((top_left[0] - bottom_left[0]) ** 2) + \
+                        ((top_left[1] - bottom_left[1]) ** 2))
 
     # take the maximum of the width and height values to reach
     # our final dimensions
     if size == "letter":
-        maxWidth = max(int(widthA), int(widthB))
-        maxHeight = int(maxWidth * (11/8.5))
-    
-    if size == "same": 
-        maxWidth = max(int(widthA), int(widthB))
-        maxHeight = max(int(heightA), int(heightB))
+        max_width = max(int(width_a), int(width_b))
+        max_height = int(max_width * (11/8.5))
+
+    if size == "same":
+        max_width = max(int(width_a), int(width_b))
+        max_height = max(int(height_a), int(height_b))
 
     # construct our destination points which will be used to
     # map the screen to a top-down, "birds eye" view
     dst = np.array([
         [0, 0],
-        [maxWidth - 1, 0],
-        [maxWidth - 1, maxHeight - 1],
-        [0, maxHeight - 1]], dtype="float32")
+        [max_width - 1, 0],
+        [max_width - 1, max_height - 1],
+        [0, max_height - 1]], dtype="float32")
 
     # calculate the perspective transform matrix and warp
     # the perspective to grab the screen
@@ -318,7 +333,7 @@ def warp_perspective(rect, grid, size="letter", verbose=False):
 
     if verbose:
         print(M)
-    warp = cv2.warpPerspective(grid, M, (maxWidth, maxHeight))
+    warp = cv2.warpPerspective(grid, M, (max_width, max_height))
     #return make_it_square(warp)
     return warp
 

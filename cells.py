@@ -1,3 +1,7 @@
+'''
+Cells removes the answer key "cells" or boxes from the worksheet
+'''
+
 import cv2
 import numpy as np
 
@@ -69,12 +73,30 @@ class Cells(object):
 
 
     def extract_cells(self, processed, display_image, count=14):
+        '''
+        Extract a given amount of cells from the worksheet. This function
+            assumes that the cells are 0.0016 +- 0.0004 of the total worksheet size.
+
+        Parameters
+        ----------
+        processed: np.ndarray
+            Thresholded image of the worksheet
+        display_image: np.ndarray
+            BGR image of the worksheet
+        count: int
+            The number of image
+
+        Return value
+        ----------
+        returns a list of cells sorted by height and then by position
+        '''
         page_area = Helpers.area(processed)
         min_percent = 0.0012
         max_percent = 0.0020
         contours = Helpers.get_sorted_contours(processed, sort_by="area")
 
-        contours = Helpers.filter_contours(contours, sides=[4], min_area=page_area*min_percent, max_area=page_area*max_percent)
+        contours = Helpers.filter_contours(contours, sides=[4], min_area=page_area*min_percent, \
+                                            max_area=page_area*max_percent)
 
         # get just the count biggest contours
         contours = contours[:count]
@@ -93,15 +115,36 @@ class Cells(object):
 
         return sorted_rects
 
-    
+
     def sort_by_problem_num(self, rects, contours):
-        n = 0
+        '''
+        Sorts the rectangular cell images by their original position on the worksheet
+            in the following order:
+
+        1 2
+        3 4
+        5 6
+        7 8
+
+        Parameters
+        ----------
+        rects:
+            List of cells
+        contours:
+            cv2.contours with points from the rects original position on the worksheet
+
+        Return value
+        ----------
+        returns a list of cells sorted by height and then by position, a list of contours sorted in
+            the same way
+        '''
         centers = []
         for contour in contours:
             centers.append(Helpers.get_centers_of_contour(contour))
 
         # sort by the y value of the centers
-        rects_centers = [(r, c, contour) for r, c, contour in sorted(zip(rects, centers, contours), key=lambda pair: pair[1][1])]
+        rects_centers = [(r, c, cnt) for r, c, cnt in sorted(zip(rects, centers, contours), \
+                        key=lambda pair: pair[1][1])]
 
         # sort pairs by the x value
         sorted_rects = []
@@ -123,11 +166,6 @@ class Cells(object):
                 sorted_contours.extend([rects_centers[i+1][2], rects_centers[i][2]])
         return sorted_rects, sorted_contours
 
-    def save_files(self, rects):
-        for i, rect in enumerate(rects):
-            Helpers.save_image("rect{}.png".format(str(i+1)), rect)
-
-
 
     def find_corners_inside_largest_contour(self, thresh, gray):
 
@@ -143,10 +181,11 @@ class Cells(object):
         # find the average color of the image
         avg_color_per_row = np.average(gray, axis=0)
         avg_color = np.average(avg_color_per_row, axis=0)
-        
-        # for each corner, move the corner's coordinates towards the center until you find a 
+
+        # for each corner, move the corner's coordinates towards the center until you find a
         # white spot (a spot where the color is less than the average color)
-        for i in range(len(corners)):
+
+        for i in range(4):
             cX, cY = corners[i]
             cX, cY = int(cX), int(cY)
             # while we are on black, step towards the center
@@ -169,5 +208,5 @@ class Cells(object):
 
 
 if __name__ == '__main__':
-    image = Helpers.load_image('images/processed_org2.png')
-    ext = Cells(image, True)
+    img = Helpers.load_image('images/processed_org2.png')
+    ext = Cells(img, True)

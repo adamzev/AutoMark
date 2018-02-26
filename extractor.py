@@ -1,13 +1,9 @@
 import cv2
-import numpy as np
-import pickle
 
 import helpers as Helpers
-#from cells import Cells
 from pipeline import Pipeline
-import pytesseract
-    
-# code adpated from https://github.com/prajwalkr/SnapSudoku/blob/master/scripts/sudokuExtractor.py
+
+
 class Extractor(object):
     '''
         Stores and manipulates the input image to extract the Sudoku puzzle
@@ -16,7 +12,7 @@ class Extractor(object):
 
     def __init__(self, path, show_steps=False, save=False):
         self.image = Helpers.load_image(path)
-        
+
         # build the prepocessing pipleine
         pipeline = Pipeline([
             Helpers.convert_to_grayscale,
@@ -31,7 +27,7 @@ class Extractor(object):
         contour = Helpers.largest_contour(processed_image)
         processed_image_cropped = Helpers.cut_out_rect(processed_image, contour)
         corners = Helpers.get_corners(processed_image_cropped)
-        
+
         # apply the same cropping and warping to the original image
         image_cropped = Helpers.cut_out_rect(self.image, contour)
         straigtened_image = Helpers.warp_perspective(corners, image_cropped)
@@ -42,7 +38,6 @@ class Extractor(object):
             Helpers.show(image_cropped, 'Original image cropped')
             Helpers.show(straigtened_image, 'Final image')
 
-        
         self.final = straigtened_image
 
         if save:
