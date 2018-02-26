@@ -9,6 +9,16 @@ Image manipulation helper functions
 code adpated from https://github.com/prajwalkr/SnapSudoku/
 '''
 
+BGR_COLORS = {
+    "GREEN" : (0, 255, 120),
+    "DARK GREEN" : (0, 60, 30),
+    "YELLOW" : (66, 244, 220),
+    "BLACK" : (0, 0, 0),
+    "RED" : (0, 38, 232),
+    "DARK RED" : (0, 7, 80),
+    "WHITE" : (255, 255, 255)
+}
+
 def show(img, window_name='Image'):
     screen_res = 1280.0, 720.0
     scale_width = screen_res[0] / img.shape[1]
@@ -151,7 +161,7 @@ def largest_contour(image):
             image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return max(contours, key=cv2.contourArea)
 
-def largest_4_sided_contour(processed, show_contours=False, display_image=None):
+def largest_4_sided_contour(processed, show_contours=False):
     _, contours, _ = cv2.findContours(
         processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -288,7 +298,16 @@ def get_rectangle_corners(cnt):
     return rect
 
 def convert_to_grayscale(image):
+    ''' converts BGR images to grayscale '''
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+def convert_color(image, source, dest):
+    conv_type = source + "2" + dest
+    conversions = {
+        "BGR2RGB" : cv2.COLOR_BGR2RGB,
+        "BGR2GRAY" : cv2.COLOR_BGR2GRAY
+    }
+    return cv2.cvtColor(image, conversions[conv_type])
 
 def blur(image, pixels):
     return cv2.GaussianBlur(image, (pixels, pixels), 0)
@@ -354,3 +373,22 @@ def erode(image, iterations, kernel_type="ellipse"):
 def ellipse_morph(image, size=2):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (size, size))
     return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+
+def font(font_name):
+    font_names = {
+        "Hershey" : cv2.FONT_HERSHEY_SCRIPT_SIMPLEX
+    }
+    return font_names[font_name]
+
+def text_size(text, font_face, font_scale, thickness):
+    return cv2.getTextSize(text, font_face, font_scale, thickness)
+
+def draw_text(image, text, text_xy, font_face, font_scale, text_color, thickness, line_style=cv2.LINE_AA):
+    cv2.putText(image, text, text_xy, font_face, font_scale, \
+                        text_color, thickness, line_style)
+
+def draw_contour(image, contour, contour_color, thickness=5):
+    cv2.drawContours(image, [contour], -1, contour_color, thickness)
+
+def draw_circle(image, location, size=7, color=BGR_COLORS["WHITE"]):
+    cv2.circle(image, location, size, color, -1)
