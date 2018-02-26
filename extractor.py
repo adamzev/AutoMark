@@ -48,10 +48,6 @@ class Extractor(object):
         if save:
             cv2.imwrite('processed_org2.png', self.gray2)
 
-
-
-
-
         return None
 if __name__ == '__main__':
     ext = Extractor('images/BCBA8F9752.jpg', True)

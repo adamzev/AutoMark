@@ -1,13 +1,12 @@
+import cv2
+from keras.models import load_model
+from PIL import Image
+from pyzbar.pyzbar import decode
+
 import helpers as Helpers
 from cells import Cells
 from extractor import Extractor
 from ocr import OCR
-import numpy as np
-from keras.models import load_model
-import cv2
-import qrtools
-from PIL import Image
-from pyzbar.pyzbar import decode
 
 ext = Extractor('images/IMG_20180225_161951595.jpg', False)
 

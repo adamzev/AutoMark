@@ -6,6 +6,7 @@ import numpy as np
 
 '''
 Image manipulation helper functions
+code adpated from https://github.com/prajwalkr/SnapSudoku/
 '''
 
 def show(img, windowName='Image'):
@@ -39,13 +40,7 @@ def thresholdify(img):
                                 cv2.THRESH_BINARY, 11, 2)
     return 255 - img
 
-def Canny(image):
-    edges = cv2.Canny(image, 100, 200)
-    show(edges)
-    return edges
 
-def dilate(image, kernel):
-    return cv2.dilate(image, kernel)
 
 
 def get_sorted_contours(processed, sort_by='area'):
@@ -223,10 +218,6 @@ def resize_and_fill(image, size, border_size=4):
 
     return new_image
 
-
-def make_it_square(image, side_length=306):
-    return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
-
 def make_it_letter(image, side_length=306):
     return cv2.resize(image, (side_length, int(side_length * (11/8.5))))
 
@@ -333,53 +324,6 @@ def warp_perspective(rect, grid, size="letter", verbose=False):
     #return make_it_square(warp)
     return warp
 
-def getTopLine(image):
-    for i, row in enumerate(image):
-        if np.any(row):
-            return i
-    return None
-
-def getBottomLine(image):
-    for i in range(image.shape[0] - 1, -1, -1):
-        if np.any(image[i]):
-            return i
-    return None
-
-def getLeftLine(image):
-    for i in range(image.shape[1]):
-        if np.any(image[:, i]):
-            return i
-    return None
-
-def getRightLine(image):
-    for i in range(image.shape[1] - 1, -1, -1):
-        if np.any(image[:, i]):
-            return i
-    return None
-
-def rowShift(image, start, end, length):
-    shifted = np.zeros(image.shape)
-    if start + length < 0:
-        length = -start
-    elif end + length >= image.shape[0]:
-        length = image.shape[0] - 1 - end
-
-    for row in range(start, end + 1):
-        shifted[row + length] = image[row]
-    return shifted
-
-def colShift(image, start, end, length):
-    shifted = np.zeros(image.shape)
-    if start + length < 0:
-        length = -start
-    elif end + length >= image.shape[1]:
-        length = image.shape[1] - 1 - end
-
-    for col in range(start, end + 1):
-        shifted[:, col + length] = image[:, col]
-    return shifted
-
-
 def get_structuring_element(kernel_type="ellispe"):
     if kernel_type == "ellipse":
         return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
@@ -394,60 +338,6 @@ def erode(image, iterations, kernel_type="ellipse"):
     kernel = get_structuring_element(kernel_type)
     return cv2.erode(image, kernel, iterations=iterations)
 
-def mask(image, contour):
-    
-    mask = np.zeros_like(image) # Create mask where white is what we want, black otherwise
-    cv2.drawContours(mask, [contour], 0, (255, 255, 255), -1) # Draw filled contour in mask
-    out = np.zeros_like(image) # Extract out the object and place into output image
-    out[mask == 255] = image[mask == 255]
-
-    # Now crop
-    x, y, z = np.where(mask == 255)
-    #print(xy)
-    #x, y = xy
-    topx, topy = (np.min(x), np.min(y))
-    bottomx, bottomy = (np.max(x), np.max(y))
-    out = out[topx:bottomx+1, topy:bottomy+1]
-
-    # Show the output image
-    cv2.imshow('Output', out)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
 def ellipse_morph(image, size=2):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (size, size))
     return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-
-
-def get_blob_detector():
-    params = cv2.SimpleBlobDetector_Params()
-    
-    # Change thresholds
-    params.minThreshold = 240
-    params.maxThreshold = 255
-    
-    # Filter by Area.
-    params.filterByArea = False
-    params.minArea = 5
-    
-    # Filter by Circularity
-    params.filterByCircularity = False
-    #params.minCircularity = 0.1
-    
-    # Filter by Convexity
-    params.filterByConvexity = False
-    #params.minConvexity = 0.87
-    
-    # Filter by Inertia
-    params.filterByInertia = False
-    params.minInertiaRatio = 0.01
-    
-    # Create a detector with the parameters
-    detector = cv2.SimpleBlobDetector_create(params)
-
-    # Detect blobs.
-    keypoints = detector.detect(thresh)
-
-def show_blobs():
-    im_with_keypoints = cv2.drawKeypoints(cell, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    Helpers.show(im_with_keypoints, "clean cell")

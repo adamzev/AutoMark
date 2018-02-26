@@ -3,7 +3,6 @@ import pickle
 import cv2
 import helpers as Helpers
 import numpy as np
-from digit import Digit
 from pipeline import Pipeline
 
 
@@ -169,42 +168,6 @@ class Cells(object):
         return corners
 
 
-
-    def clean(self, cell):
-        contour = Helpers.largestContour(cell.copy())
-        x, y, w, h = cv2.boundingRect(contour)
-        cell = Helpers.make_it_square(cell[y:y + h, x:x + w], 28)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
-        cell = cv2.morphologyEx(cell, cv2.MORPH_CLOSE, kernel)
-        cell = 255 * (cell / 130)
-        return cell
-
-    def centerDigit(self, digit):
-        digit = self.centerX(digit)
-        digit = self.centerY(digit)
-        return digit
-
-    def centerX(self, digit):
-        topLine = Helpers.getTopLine(digit)
-        bottomLine = Helpers.getBottomLine(digit)
-        if topLine is None or bottomLine is None:
-            return digit
-        centerLine = (topLine + bottomLine) >> 1
-        imageCenter = digit.shape[0] >> 1
-        digit = Helpers.rowShift(
-            digit, start=topLine, end=bottomLine, length=imageCenter - centerLine)
-        return digit
-
-    def centerY(self, digit):
-        leftLine = Helpers.getLeftLine(digit)
-        rightLine = Helpers.getRightLine(digit)
-        if leftLine is None or rightLine is None:
-            return digit
-        centerLine = (leftLine + rightLine) >> 1
-        imageCenter = digit.shape[1] >> 1
-        digit = Helpers.colShift(
-            digit, start=leftLine, end=rightLine, length=imageCenter - centerLine)
-        return digit
 
 if __name__ == '__main__':
     image = Helpers.loadImage('images/processed_org2.png')
