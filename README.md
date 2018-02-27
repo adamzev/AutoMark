@@ -61,7 +61,7 @@ The student filled in 9 problems correctly and 5 problems incorrectly.
 
 The program correctly marked 12 problems (8 correct in green and 4 incorrect in red).
 
-The program marked 2 problems as unknown (with a yellow box and black text). It was unable to read the student's handwriting on one problem and unable to segment the connected digits on problem #2. 
+The program marked 2 problems as unknown (with a yellow box and black text). It was unable to segment the connected digits on problem #2 and unable to read the student's handwriting on problem #10. 
 
 Algorithm
 ---
