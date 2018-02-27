@@ -41,7 +41,7 @@ class Extractor(object):
         self.final = straigtened_image
 
         if save:
-            cv2.imwrite('processed_org2.png', self.gray2)
+            Helpers.save_image('images/processed_org2.png', self.gray2)
 
         return None
 if __name__ == '__main__':
