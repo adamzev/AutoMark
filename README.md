@@ -54,6 +54,7 @@ An Example Input:
 </br>
 
 > The current code gives this output: 
+
 ![Final result](https://www.tiny-robot.com/static/img/graded_small2.png "Final Result")
 
 The student filled in 9 problems correctly and 5 problems incorrectly.
@@ -87,12 +88,12 @@ Two images are shown at some steps. The various steps perform best with differen
 
 > Crop out the largest contour:
 
-![Cropped worksheet thresh](https://www.tiny-robot.com/static/img/AutoMark/ext2.png "Cropped worksheet thresh")
-![Cropped worksheet](https://www.tiny-robot.com/static/img/AutoMark/ext3.png "Cropped worksheet")
+<img src="https://www.tiny-robot.com/static/img/AutoMark/ext2.png" width=200 alt="Cropped worksheet thresh">
 
 > Warp perspective to a letter sized rectangle:
 
 ![Warped](https://www.tiny-robot.com/static/img/AutoMark/ext4.png "Warped")
+
 > Crop out the cells:
 
 ![Cell 1](https://www.tiny-robot.com/static/img/AutoMark/cell1.png "Cell 1")
@@ -128,6 +129,7 @@ Two images are shown at some steps. The various steps perform best with differen
 ![MNIST 2](https://www.tiny-robot.com/static/img/AutoMark/ocr_1_8.png "MNIST 2")
 
 > Final Result:
+
 ![Final result](https://www.tiny-robot.com/static/img/graded_small2.png "Final Result")
 
 ----------
