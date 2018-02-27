@@ -15,7 +15,7 @@ AutoMark reads a "Grade-it" QR code/form code and uses that to get the associate
 ----------
  TODO:
 ---------
- - Tests AutoMark with a larger variety of images from different cameras.
+ - Test AutoMark with a larger variety of images from different cameras.
  - Improve digit string segmentation (watershed?). 
  - Implement a form code database.
 
