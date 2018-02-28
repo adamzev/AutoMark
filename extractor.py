@@ -6,8 +6,7 @@ from pipeline import Pipeline
 
 class Extractor(object):
     '''
-        Stores and manipulates the input image to extract the Sudoku puzzle
-        all the way to the cells
+        Stores and manipulates the input image to extract the worksheet
     '''
 
     def __init__(self, path, show_steps=False, save=False):

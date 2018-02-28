@@ -29,7 +29,7 @@ class Cells(object):
         self.cells = self.extract_cells(processed_image, self.image)
 
         student_responses = self.get_student_responses()
- 
+
         if show_steps:
             Helpers.show(self.image, "start")
             Helpers.show(processed_image, "processed")

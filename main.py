@@ -6,18 +6,19 @@ from qr import reader
 from grader import Grader
 
 def main(image_path):
+    # get the final worksheet from the image
     ext = Extractor(image_path, False)
-    # get the final worksheet extracted from the image
-
     final = ext.final
+
+    # get the form code by checking the image's QR code
     decoded_qr_code = reader(final)
 
+    # extract the cells and student's responses
     cells = Cells(final)
 
+    # grade the worksheet by using a CNN to OCR the student's responses
     grader = Grader(decoded_qr_code)
-
     grader.grade(cells.student_responses)
-
     grader.display(final, cells.sorted_contours)
 
 if __name__ == '__main__':
