@@ -14,7 +14,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rd'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -56,7 +56,7 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['numpy>=1', 'hdf5', 'pillow', 'Keras>=2', 'opencv-python>=3.4', 'pyzbar'],
+    install_requires=['numpy>=1', 'tensorflow', 'six', 'pillow', 'Keras>=2', 'opencv-python>=3.4'],
 
     package_data={  # Optional
         'data': ['cnn_mnist.h5'],
