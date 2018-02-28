@@ -12,7 +12,7 @@ class Grader(object):
 
     def __init__(self, form_code):
         self.answer_key = self.answer_keys[form_code]
-        self.model = model = load_model('cnn_mnist.h5')
+        self.model = model = load_model('../data/cnn_mnist.h5')
         self.marks = []
 
     def grade(self, student_responses):
