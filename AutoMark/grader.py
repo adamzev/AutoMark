@@ -3,7 +3,31 @@ from keras.models import load_model
 
 import helpers as Helpers
 
+CONFIDENCE_VALUE = 0.97
+
 class Grader(object):
+    '''
+        Grade the worksheet by calling a model to check the value of each image and display the
+        results on the worksheet.
+
+        Parameters
+        ----------
+        form_code: str
+            a hexadecimal form code
+        
+        Attributes
+        ----------
+        answer_keys: dict
+            a dict where the keys are form codes and the values are lists of correct int answers
+        answer_key: list of ints
+            a list of the int answers
+        marks: array of strings
+            valid strings are "correct", "unknown" and "wrong"
+        model
+            a Keras/Tensorflow model loaded from a h5 format
+    '''
+
+    # TODO replace the dict of answer keys with a MongoDB database of answer keys
     answer_keys = {
         "BCBA8F9752" : [165, 123, 52, 130, 99, 87, 138, 104, 152, 90, 122, 150, 103, \
                 69, 130, 63, 29, 98, 133, 133, 62, 187, 138, 91, 124, 109, 68, 113, \
@@ -12,7 +36,7 @@ class Grader(object):
 
     def __init__(self, form_code):
         self.answer_key = self.answer_keys[form_code]
-        self.model = model = load_model('../data/cnn_mnist.h5')
+        self.model = load_model('../data/cnn_mnist.h5')
         self.marks = []
 
     def grade(self, student_responses):
@@ -22,7 +46,7 @@ class Grader(object):
             for digit_image in segmented_digits:
                 value, confidence = OCR(digit_image, self.model)
                 students_answer += str(value)
-                if confidence < 0.97:
+                if confidence < CONFIDENCE_VALUE:
                     confident = False
             correct_ans = self.answer_key[problem_number]
             if int(students_answer) == correct_ans:

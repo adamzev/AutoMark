@@ -4,6 +4,7 @@ from cells import Cells
 from extractor import Extractor
 from qr import reader
 from grader import Grader
+import helpers as Helpers
 
 def main(image_path):
     # get the final worksheet from the image
@@ -19,7 +20,8 @@ def main(image_path):
     # grade the worksheet by using a CNN to OCR the student's responses
     grader = Grader(decoded_qr_code)
     grader.grade(cells.student_responses)
-    grader.display(final, cells.sorted_contours)
+    worksheet = grader.display(final, cells.sorted_contours)
+    Helpers.save_image(f'{Helpers.IMAGE_DIRECTORY}/graded.png', worksheet)
 
 if __name__ == '__main__':
     try:

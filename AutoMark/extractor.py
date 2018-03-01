@@ -40,8 +40,12 @@ class Extractor(object):
         self.final = straigtened_image
 
         if save:
-            Helpers.save_image('images/processed_org2.png', self.gray2)
+            Helpers.save_image(f'{Helpers.IMAGE_DIRECTORY}/extractor_finish.png', self.final)
 
         return None
 if __name__ == '__main__':
-    ext = Extractor('images/BCBA8F9752.jpg', True)
+    # Try out this class seperately by using this example:
+    # This code will run when the file is exectued directly but
+    # it will be ignored when it is imported.
+    ext = Extractor(f'{Helpers.EXAMPLE_DIRECTORY}/extractor_start.jpg', show_steps=True)
+    # Helpers.save_image(f'{Helpers.EXAMPLE_DIRECTORY}/extractor_finish.png', ext.final)

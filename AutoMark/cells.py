@@ -16,6 +16,7 @@ class Cells(object):
     '''
     cell_pipeline = Pipeline([
         Helpers.convert_to_grayscale,
+        lambda image: Helpers.dilate(image, 3),
         lambda image: cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1],
         lambda image: Helpers.ellipse_morph(image, 1)
     ])
@@ -191,6 +192,7 @@ class Cells(object):
         # find the largest contour
         contour = Helpers.largest_4_sided_contour(thresh)
         # find its center
+
         centerX, centerY = Helpers.get_centers_of_contour(contour)
         app = Helpers.approx(contour)
         #Helpers.draw_contour(gray, contour, Helpers.BGR_COLORS["WHITE"])
@@ -228,5 +230,8 @@ class Cells(object):
 
 
 if __name__ == '__main__':
-    img = Helpers.load_image('images/processed_org2.png')
-    ext = Cells(img, True)
+    # Try out this class seperately by using this example:
+    # This code will run when the file is exectued directly but
+    # it will be ignored when it is imported.
+    img = Helpers.load_image(f'{Helpers.EXAMPLE_DIRECTORY}/cells_start.png')
+    ext = Cells(img, show_steps=True)

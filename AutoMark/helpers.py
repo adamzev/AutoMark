@@ -1,4 +1,5 @@
 import math
+import os
 
 import cv2
 import numpy as np
@@ -18,6 +19,17 @@ BGR_COLORS = {
     "DARK RED" : (0, 7, 80),
     "WHITE" : (255, 255, 255)
 }
+
+def get_image_directory():
+    return os.path.abspath(
+                    os.path.join(os.path.abspath(__file__), os.pardir, os.pardir, 'images'))
+
+def get_example_directory():
+    return os.path.abspath(
+                    os.path.join(os.path.abspath(__file__), os.pardir, os.pardir, 'examples'))
+
+EXAMPLE_DIRECTORY = get_example_directory()
+IMAGE_DIRECTORY = get_image_directory()
 
 def show(img, window_name='Image'):
     screen_res = 1280.0, 720.0
@@ -246,9 +258,12 @@ def area(image):
 
 def get_centers_of_contour(contour):
     M = cv2.moments(contour)
-    cX = int(M["m10"] / M["m00"])
-    cY = int(M["m01"] / M["m00"])
-    return cX, cY
+    try:
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        return cX, cY
+    except ZeroDivisionError:
+        raise ValueError("Invalid Contour")
 
 
 def cut_out_rect(image, contour):
@@ -386,6 +401,9 @@ def text_size(text, font_face, font_scale, thickness):
 def draw_text(image, text, text_xy, font_face, font_scale, text_color, thickness, line_style=cv2.LINE_AA):
     cv2.putText(image, text, text_xy, font_face, font_scale, \
                         text_color, thickness, line_style)
+
+def draw_contours(image, contours, contour_color, thickness=5):
+    cv2.drawContours(image, contours, -1, contour_color, thickness)
 
 def draw_contour(image, contour, contour_color, thickness=5):
     cv2.drawContours(image, [contour], -1, contour_color, thickness)
