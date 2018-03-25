@@ -12,39 +12,24 @@ AutoMark reads a "Grade-it" QR code/form code and uses that to get the associate
 *Adapted from [SnapSuduku](https://github.com/prajwalkr/SnapSudoku/) by [Prajwal](https://github.com/prajwalkr)*
 
 
-----------
- TODO:
----------
- - Test AutoMark with a larger variety of images from different cameras.
- - Improve digit string segmentation (watershed?). 
- - Implement a form code database.
-
-Related Projects:
----
-[Grade-it](https://github.com/tutordelphia/grade-it): A math worksheet generator
-
 Prerequisites:
 ---
 
 - Python 3
     - Download from [here](https://www.python.org/downloads/)
 
-- OpenCV 3.4.0
-    - `sudo apt-get install python-opencv` (preferred)
-    - Install OpenCV from [here](http://opencv.org/downloads.html) 
+- PyZBar
+    - `sudo apt-get install libzbar0`
 
-- Numpy
-    - `pip install numpy` (preferred)
-    - You can build it from source [here](https://github.com/numpy/numpy)
+- All other requirements can be installed using:
+    - `pip install -r requirements.txt`
 
-- Other modules:
-    - Details to be added regard PyZBar, Keras, H5PY, etc
 
 Running AutoMark: 
 ---
     git clone https://github.com/tutordelphia/AutoMark.git
-    cd AutoMark
-    python main.py <path-to-input-image>
+    cd AutoMark/AutoMark
+    python automark.py <path-to-input-image>
 
 An Example Input:
 ---
@@ -132,9 +117,23 @@ Two images are shown at some steps. The various steps perform best with differen
 
 ![Final result](https://www.tiny-robot.com/static/img/graded_small2.png "Final Result")
 
+
+----------
+ TODO:
+---------
+ - Test AutoMark with a larger variety of images from different cameras.
+ - Improve digit string segmentation (watershed?). 
+ - Implement a form code database.
+
+Related Projects:
+---
+[Grade-it](https://github.com/tutordelphia/grade-it): A math worksheet generator
+
 ----------
 Acknowledgements
 ---
 Thank you to the creators and contributors of [SnapSuduku](https://github.com/prajwalkr/SnapSudoku/)
 
 Thank you to [octagonaltree](https://www.reddit.com/user/octagonaltree) for the mentorship and guidance.
+
+Thank you to [Chris Lowen](https://github.com/Lokilow) for the feedback.
