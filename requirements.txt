@@ -7,7 +7,7 @@ image==1.5.19
 Keras==2.1.4
 Markdown==2.6.11
 numpy==1.14.1
-opencv-python==3.4.0.12
+opencv-python==4.2.0.32
 Pillow==6.2.0
 protobuf==3.5.1
 pytz==2018.3
